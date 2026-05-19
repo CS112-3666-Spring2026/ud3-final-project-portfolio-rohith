@@ -16,10 +16,10 @@ import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 /**
- * Unified GUI Layout and Model Integration for UD2.
+ * Completed GUI with integration of all classes (Transaction, Expense & Income) for UD3
  *
  * @author Rohith Mekala
- * @version 1.0
+ * @version 1.1
  */
 public class HelloApplication extends Application {
     private double currentRunningBalance = 0.00;
@@ -42,7 +42,7 @@ public class HelloApplication extends Application {
         categorySelector.getItems().addAll("Food", "Rent", "Utilities", "Entertainment", "Salary");
         categorySelector.setValue("Food"); // Safe fallback default
 
-        CheckBox taxDeductibleCheck = new CheckBox("Tax Deductible");
+        CheckBox taxDeductibleCheck = new CheckBox("Tax Deductible / Passive");
         Button submitButton = new Button("Submit Transaction");
 
         // Collect inputs into a single vertical column
@@ -68,7 +68,7 @@ public class HelloApplication extends Application {
             System.out.println("Console Alert: Category dropdown changed to: " + categorySelector.getValue());
         });
 
-        //INTEGRATE THE UD1 EXPENSE CLASS VIA BUTTON CLICK ---
+        //INTEGRATE THE UD1 EXPENSE & INCOME CLASSES VIA BUTTON CLICK
         submitButton.setOnAction(event -> {
             System.out.println("\nHello! Submit button clicked.");
 
@@ -76,7 +76,7 @@ public class HelloApplication extends Application {
             String rawDescription = descriptionInput.getText();
             String rawAmountText = amountInput.getText();
             String chosenCategory = categorySelector.getValue();
-            boolean isTaxDeductible = taxDeductibleCheck.isSelected();
+            boolean checkState = taxDeductibleCheck.isSelected();
 
             // Guard rails to make sure user didn't leave inputs blank
             if (rawDescription.trim().isEmpty() || rawAmountText.trim().isEmpty()) {
@@ -86,25 +86,34 @@ public class HelloApplication extends Application {
             try {
                 double parsedAmount = Double.parseDouble(rawAmountText);
 
-                Expense backendLoggedExpense = new Expense(rawDescription, parsedAmount, chosenCategory, isTaxDeductible);
-
-                System.out.println("SUCCESSFULLY BUILT MODEL CLASS OBJECT FROM LIVE FRONTEND FIELDS:");
-                System.out.println(backendLoggedExpense);
-
-                // Check if the placeholder message string is still there, and remove it before adding real entries
+                // Wipe out the initial system placeholder text message before inserting real data rows
                 if (!transactionLogDisplay.getItems().isEmpty() &&
                         transactionLogDisplay.getItems().get(0).equals("System initial log: No entries recorded yet.")) {
                     transactionLogDisplay.getItems().clear();
                 }
 
-                // Balance Calculation: "Salary" adds to balance, all other categories subtract
+                Transaction genericTransaction;
+
+                // Branch logic path based on user dropdown choices
                 if (chosenCategory.equalsIgnoreCase("Salary")) {
+                    // Instantiate the new Income model object class (checkState tracks if it's Passive)
+                    genericTransaction = new Income(rawDescription, parsedAmount, chosenCategory, checkState);
                     currentRunningBalance += parsedAmount;
+                    System.out.println("SUCCESSFULLY INSTANTIATED INCOME OBJECT MODULE:");
                 } else {
+                    // Instantiate the Expense model object class (checkState tracks if it's Tax Deductible)
+                    genericTransaction = new Expense(rawDescription, parsedAmount, chosenCategory, checkState);
                     currentRunningBalance -= parsedAmount;
+                    System.out.println("SUCCESSFULLY INSTANTIATED EXPENSE OBJECT MODULE:");
                 }
 
-                transactionLogDisplay.getItems().add(backendLoggedExpense.toString());
+                // Verify structural data state inside the IDE compilation console log streams
+                System.out.println(genericTransaction);
+
+                // Dynamically feed the item's customized toString format right onto the screen display list
+                transactionLogDisplay.getItems().add(genericTransaction.toString());
+
+                // Refresh our live account tracker output string metrics
                 netBalanceLabel.setText(String.format("Current Account Net Balance: $%.2f", currentRunningBalance));
 
                 // Clear out input fields so they are clean for the next entry
